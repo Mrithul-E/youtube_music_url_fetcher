@@ -58,7 +58,7 @@ def get_song_name(song_name):
         if k == len(song_name_json):
             break
         
-        if song_name_json[k]['category'] != 'Featured playlists' or song_name_json[k]['category'] != 'Community playlists' or song_name_json[k]['category'] != 'More from YouTube':
+        if song_name_json[k]['category'] != 'Featured playlists' and song_name_json[k]['category'] != 'Community playlists' and song_name_json[k]['category'] != 'More from YouTube':
             try:
                 title_name = song_name_json[k]['title']
                 video_id = song_name_json[k]['videoId'] 
