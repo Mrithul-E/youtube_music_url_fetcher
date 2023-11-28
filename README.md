@@ -39,7 +39,7 @@ pip install innertube ytmusicapi pytube
    Example Output:
 
    ```python
-   {'title': 'song name', 'lyric': None, 'url': 'long url'}
+   {'title': 'song name', 'lyric': None, 'url': 'long url', "thumbnail":'url of thumbnail'}
    ```
 
 ## Important Notes
