@@ -62,7 +62,7 @@ def get_song_name(song_name):
             try:
                 title_name = song_name_json[k]['title']
                 video_id = song_name_json[k]['videoId'] 
-                thumbnail_url = song_name_json[0]['thumbnails'][0]['url']
+                thumbnail_url = song_name_json[k]['thumbnails'][0]['url']
             except:
                 k += 1
                 continue      
