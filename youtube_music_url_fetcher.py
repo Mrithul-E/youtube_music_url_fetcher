@@ -74,7 +74,7 @@ def get_song_name(song_name):
         thumbnails.append(thumbnail_url)
         
         k += 1
-        if len(title_list) == 6:
+        if len(title_list) == 5:
             break
     #_______________________________________
     
