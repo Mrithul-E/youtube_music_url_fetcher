@@ -53,6 +53,7 @@ def get_song_name(song_name):
     title_name = None
     title_list = []
     vide_id_list = []
+    thumbnails = []
     while True:
         if k == len(song_name_json):
             break
@@ -61,6 +62,7 @@ def get_song_name(song_name):
             try:
                 title_name = song_name_json[k]['title']
                 video_id = song_name_json[k]['videoId'] 
+                thumbnails = song_name_json[0]['thumbnails'][0]['url']
             except:
                 k += 1
                 continue      
@@ -98,8 +100,8 @@ def get_song_name(song_name):
         lyrics = list(executor.map(get_lyrics_of_song,vide_id_list))    
     #get_lyrics_of_song(videID=video_id) 
     song_data_dict = []
-    for title,lyric,url in zip(title_list,lyrics,urls): 
-        song_data_dict.append({"title":title,"lyric":lyric,"url":url})
+    for title,lyric,url,thumbnail in zip(title_list,lyrics,urls,thumbnails): 
+        song_data_dict.append({"title":title,"lyric":lyric,"url":url,"thumbnail":thumbnail})
     return song_data_dict
     
 #data = get_song_name()    
