@@ -25,7 +25,7 @@ def get_audio_url(song_name):
             streamData_adap_formats = json_respo['adaptiveFormats']
             for i in streamData_adap_formats:
                 if "mimeType" in i:
-                    if i["mimeType"].split(";")[0]=="audio/webm" or i["mimeType"].split(";")[0]=="audio/mp4":
+                    if i["mimeType"].split(";")[0]=="audio/mp4":
                         if "url" in i:
                             link = i["url"]
                             break
