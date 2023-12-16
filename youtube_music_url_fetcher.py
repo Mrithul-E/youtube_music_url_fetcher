@@ -2,10 +2,111 @@ import innertube
 from ytmusicapi import YTMusic
 from pytube import YouTube
 from concurrent.futures import ThreadPoolExecutor
+import requests
+from concurrent.futures import as_completed
+from concurrent.futures import Future
+import os 
+import mutagen
 
 yt = YTMusic()
 client = innertube.InnerTube("WEB")
 
+class download_audio:
+    
+    def __init__(self, audio_url, file_name,del_file : bool):
+        self.audio_url = audio_url
+        self.file_name = file_name
+        if del_file:
+            try:
+                os.remove(self.file_name)
+            except:
+               pass 
+        
+    
+    def get_chunk_list(self):
+        r = requests.get(self.audio_url,stream=True)
+        byt = r.headers['Content-Length']
+        byt = int(byt)
+
+        half_bytes = byt/2
+        start_end_bytes = []
+        start = 0
+        half_bytes = str(half_bytes).replace(".0","")
+        try:
+            half_bytes = int(half_bytes)
+        except:
+            half_bytes = float(half_bytes)
+                
+        if str(type(half_bytes)) == "<class 'float'>":
+                half_bytes = half_bytes+0.5
+
+        end = half_bytes
+
+        while True:
+            if end > byt:
+                end = byt
+            if end == byt:
+                start_end_bytes.append((start,end))
+                break
+            start_end_bytes.append((start,end))
+            start = end+1
+            end = start+(half_bytes-1)
+        return start_end_bytes, byt
+    
+    def download(self,download_data):
+
+        start_byte_and_end_byte, url, file_name = download_data
+        future = Future()
+        
+        headers = {'Range': 'bytes=%d-%d' % (start_byte_and_end_byte[0],start_byte_and_end_byte[1])} 
+        r = requests.get(url, stream=False,headers=headers)
+        print(r.headers['Content-Length'])
+        try:
+            # for chunk in r.iter_content(chunk_size=1024):
+            # ...
+            with open(file_name, 'ab') as audio_file:
+                audio_file.write(r.content)
+        except:
+            import time 
+            time.sleep(1)
+            
+            with open(file_name, 'ab') as audio_file:
+                audio_file.write(r.content)
+        #saving the byte string to the "future":        
+        future.set_result(r.content)        
+        return future
+    
+    def download_file(self):
+        chunks,byt = self.get_chunk_list()
+        args_list = tuple(((int(chunk[0]),int(chunk[1])), self.audio_url, self.file_name) for chunk in chunks)
+        
+        import time
+        start_time = time.time()
+        #_____________________________
+        # download the 2 chunks parallel
+        
+        results = []
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            for future in as_completed(executor.map(self.download, args_list)):
+                result = future.result()
+                results.append(result)
+
+        #______________________________ 
+        
+        # rearrange the 2 binary chunks if the audio file is corrupted 
+        try:
+            mutagen.File(self.file_name)
+        except:
+            print("rearranging chunks in the file!!")
+            # reverse the results list and write it to file 
+            results = results[::-1]
+            os.remove(self.file_name)
+            with open(self.file_name,"ab") as audio_rearrange:
+                for i in results:
+                    audio_rearrange.write(i)
+        end_time = time.time()
+        
+        print(f"start:{start_time}\n end:{end_time}\n\n time_to_run:{end_time-start_time}")
 
 def get_audio_url(song_name):
     data = client.search(query=song_name)
