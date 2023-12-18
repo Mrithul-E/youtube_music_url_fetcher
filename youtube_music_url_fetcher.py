@@ -95,7 +95,16 @@ class download_audio:
         
         # rearrange the 2 binary chunks if the audio file is corrupted 
         try:
-            mutagen.File(self.file_name)
+            file_info = mutagen.File(self.file_name)
+            print(file_info)
+            if file_info == {}:
+                print("rearranging chunks in the file!!")
+                # reverse the results list and write it to file 
+                results = results[::-1]
+                os.remove(self.file_name)
+                with open(self.file_name,"ab") as audio_rearrange:
+                    for i in results:
+                        audio_rearrange.write(i)
         except:
             print("rearranging chunks in the file!!")
             # reverse the results list and write it to file 
@@ -143,7 +152,7 @@ def get_lyrics_of_song(videID):
     return lyric     
 
 
-def get_song_name(song_name):
+def get_song_data_from_name(song_name):
     """
     this function auto-correct the spelling mistakes, get search results from yt-music and 
     then call other functions for getting lyrics and url of song 
