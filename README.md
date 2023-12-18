@@ -52,6 +52,18 @@ pip install innertube ytmusicapi pytube
    obj = youtube_music_url_fetcher.download_audio(audio_url="audio url extracted using this lib",file_name="name of file",del_file="for deleting the existing file with the file at the starting // pass a bool(True/False)")
    obj.download_file()
    ```
+5. getting url and downloading song:
+   
+   full code:
+   ```python
+   import youtube_music_url_fetcher
+   
+   data = youtube_music_url_fetcher.get_song_data_from_name("song name ")
+   print(data)
+   
+   downloader = youtube_music_url_fetcher.download_audio(audio_url=data[0]['url'],file_name="hi0.mp3",del_file=True)
+   downloader.download_file()
+   ```
 
 ## Important Notes
 
