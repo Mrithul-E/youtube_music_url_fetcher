@@ -34,7 +34,7 @@ pip install innertube ytmusicapi pytube
    ```python
    import youtube_music_url_fetcher
 
-   song_info = youtube_music_url_fetcher.get_song_name(song_name="badass")
+   song_info = youtube_music_url_fetcher.get_song_name(song_name="song name ")
    print(song_info)
    ```
 
