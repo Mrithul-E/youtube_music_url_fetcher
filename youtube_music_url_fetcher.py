@@ -143,6 +143,9 @@ def get_audio_url(song_name):
     return link         
 
 def get_lyrics_of_song(videID):
+    """
+    for getting the song lyrics using videoid
+    """
     lyrics_browse_id = yt.get_watch_playlist(videID)
     lyric = None
     if lyrics_browse_id['lyrics']:
@@ -152,40 +155,52 @@ def get_lyrics_of_song(videID):
     return lyric     
 
 
-def get_song_data_from_name(song_name):
+def get_song_data_from_name(song_name,url_only):
     """
     this function auto-correct the spelling mistakes, get search results from yt-music and 
     then call other functions for getting lyrics and url of song 
     """
     name = song_name
-    song_name_json = yt.search(name)
-    k = 0
-    title_name = None
     title_list = []
     vide_id_list = []
     thumbnails = []
-    while True:
-        if k == len(song_name_json):
-            break
+    if not url_only:
+        song_name_json = yt.search(name)
+        k = 0
+        title_name = None
         
-        if song_name_json[k]['category'] != 'Featured playlists' and song_name_json[k]['category'] != 'Community playlists' and song_name_json[k]['category'] != 'More from YouTube':
-            try:
-                title_name = song_name_json[k]['title']
-                video_id = song_name_json[k]['videoId'] 
-                thumbnail_url = song_name_json[k]['thumbnails'][0]['url']
-            except:
+        while True:
+            if k == len(song_name_json):
+                break
+            
+            if song_name_json[k]['category'] != 'Featured playlists' and song_name_json[k]['category'] != 'Community playlists' and song_name_json[k]['category'] != 'More from YouTube':
+                try:
+                    title_name = song_name_json[k]['title']
+                    video_id = song_name_json[k]['videoId'] 
+                    thumbnail_url = song_name_json[k]['thumbnails'][0]['url']
+                except:
+                    k += 1
+                    continue      
+            else:
                 k += 1
-                continue      
-        else:
+                continue 
+            title_list.append(title_name+" "+"song")
+            vide_id_list.append(video_id)
+            thumbnails.append(thumbnail_url)
+            
             k += 1
-            continue 
-        title_list.append(title_name+" "+"song")
-        vide_id_list.append(video_id)
-        thumbnails.append(thumbnail_url)
-        
-        k += 1
-        if len(title_list) == 5:
-            break
+            if len(title_list) == 5:
+                break
+    else:
+        title_list.append(song_name+"song")
+        # Number of concurrent requests (adjust as needed)
+        num_threads = min(8, len(title_list))  # You can adjust the number of threads based on your needs
+
+        # Using ThreadPoolExecutor to parallelize the requests
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
+            urls = list(executor.map(get_audio_url,title_list))  
+         
+        return urls          
     #_______________________________________
     
     # artist_names = ""
