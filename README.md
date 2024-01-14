@@ -8,10 +8,10 @@ This Python script, `youtube_music_url_fetcher.py`, leverages the YouTube Music 
 
 Before using the script, ensure you have the following dependencies installed:
 
-- `innertube`: for fetching video url from youtube
-- `ytmusicapi`: for getting lyrics of songs, correct song names
-- `pytube`: for getting song url without SignatureCipher
-- `concurrent.futures.ThreadPoolExecutor`: for parallelizing requests
+- `innertube`: for fetching video url from youtube 🌐
+- `ytmusicapi`: for getting lyrics of songs, correct song names 🎶
+- `pytube`: for getting song url without SignatureCipher ⏯
+- `concurrent.futures.ThreadPoolExecutor`: for parallelizing requests ⚡
 
 You can install the dependencies using the following:
 
