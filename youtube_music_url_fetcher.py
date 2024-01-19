@@ -77,6 +77,9 @@ class download_audio:
         return future
     
     def download_file(self):
+        """
+        Download file at faster speed but cant play at real time
+        """
         chunks,byt = self.get_chunk_list()
         args_list = tuple(((int(chunk[0]),int(chunk[1])), self.audio_url, self.file_name) for chunk in chunks)
         
@@ -116,6 +119,13 @@ class download_audio:
         end_time = time.time()
         
         print(f"start:{start_time}\n end:{end_time}\n\n time_to_run:{end_time-start_time}")
+    
+    def download_chunks(self):
+        r = requests.get(self.audio_url,stream=True)
+        for i in r.iter_content(2048):
+            with open(self.file_name,'ab') as file:
+                file.write(i)
+        
 
 def get_audio_url(song_name):
     data = client.search(query=song_name)
