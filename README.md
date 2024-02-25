@@ -39,12 +39,34 @@ pip install innertube ytmusicapi pytube
    ```
 
    Example Output:
-
+   
    ```python
-   {'title': 'song name', 'lyric': None, 'url': 'long url', "thumbnail":'url of thumbnail'}
+   {"title":title,"lyric":lyric,"url":url,"thumbnail":thumbnail,"pytube_obj":pytube_obj}
+   ```
+   
+   ***
+
+   full python code with -> `spell_checking = True , url_and_pytube_obj = True`: 
+
+   
+   ```python
+   import youtube_music_url_fetcher
+
+   song_info = youtube_music_url_fetcher.get_song_name(song_name="song name",spell_checking=True,url_and_pytube_obj=True)
+   print(song_info)
    ```
 
-4. Use the `download_file()` function inside `download_audio()` class from `youtube_music_url_fetcher.py` to download the audio file:
+   Example Output:
+
+   ```python
+   {"title":title,"lyric":lyric,"url":url,"thumbnail":thumbnail,"pytube_obj":pytube_obj}
+   ```
+
+   `spell_checking` and `url_and_pytube_obj` 's default value is `True`
+
+   ***
+
+5. Use the `download_file()` function inside `download_audio()` class from `youtube_music_url_fetcher.py` to download the audio file:
 
    full python code: 
    ```python
@@ -52,7 +74,7 @@ pip install innertube ytmusicapi pytube
    obj = youtube_music_url_fetcher.download_audio(audio_url="audio url extracted using this lib",file_name="name of file",del_file="for deleting the existing file with the file at the starting // pass a bool(True/False)")
    obj.download_file()
    ```
-5. getting one url only:
+6. getting one url only:
 
    full python code: 
    ```python
@@ -68,7 +90,7 @@ pip install innertube ytmusicapi pytube
    ['https://.............']
    ```
    
-6. getting url and downloading song:
+7. getting url and downloading song:
    
    full code:
    ```python
