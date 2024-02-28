@@ -2,7 +2,7 @@
 
 # YouTube Music and YouTube API Integration
 
-This Python script, `youtube_music_url_fetcher.py`, leverages the YouTube Music API and YouTube API to retrieve information about songs based on a provided search term. The script is designed to find the top 6 search results for a given song name, extract audio URLs for those songs, and fetch lyrics if available. Additionally, it provides a convenient function, `get_song_name()`, for users to obtain information about a specific song.
+This Python script, `youtube_music_url_fetcher.py`, leverages the YouTube Music API and YouTube API to retrieve information about songs based on a provided search term. The script is designed to find the top 6 search results for a given song name, extract audio URLs for those songs, and fetch lyrics if available. Additionally, it provides a convenient function, `get_song_data_from_name()`, for users to obtain information about a specific song.
 
 ## Dependencies
 
@@ -28,23 +28,30 @@ pip install innertube ytmusicapi pytube
    import youtube_music_url_fetcher
    ```
    
-3. Use the `get_song_name()` function from `youtube_music_url_fetcher.py` to retrieve information about a song:
+3. Use the `get_song_data_from_name()` function from `youtube_music_url_fetcher.py` to retrieve information about a song:
 
    full python code: 
    ```python
    import youtube_music_url_fetcher
 
-   song_info = youtube_music_url_fetcher.get_song_name(song_name="song name ")
+   song_info = youtube_music_url_fetcher.get_song_data_from_name(song_name="song name ")
    print(song_info)
    ```
 
    Example Output:
    
    ```python
-   {"title":title,"lyric":lyric,"url":url,"thumbnail":thumbnail,"pytube_obj":pytube_obj}
+   [{"title":title,"lyric":lyric,"url":url,"thumbnail":thumbnail,"pytube_obj":pytube_obj}]
    ```
    
    ***
+   <br>
+   
+- parameter : `spell_checking` defines weather to correct the spelling of the song use yt music searching 
+
+- parameter : `url_and_pytube_obj` defines weather to return the url and pytube object
+
+   <br>
 
    full python code with -> `spell_checking = True , url_and_pytube_obj = True`: 
 
@@ -52,35 +59,74 @@ pip install innertube ytmusicapi pytube
    ```python
    import youtube_music_url_fetcher
 
-   song_info = youtube_music_url_fetcher.get_song_name(song_name="song name",spell_checking=True,url_and_pytube_obj=True)
+   song_info = youtube_music_url_fetcher.get_song_data_from_name(song_name="song name",spell_checking=True,url_and_pytube_obj=True)
    print(song_info)
    ```
 
    Example Output:
 
    ```python
-   {"title":title,"lyric":lyric,"url":url,"thumbnail":thumbnail,"pytube_obj":pytube_obj}
+   [{"title":title,"lyric":lyric,"url":url,"thumbnail":thumbnail,"pytube_obj":pytube_obj}]
    ```
 
    `spell_checking` and `url_and_pytube_obj` 's default value is `True`
 
    ***
 
-5. Use the `download_file()` function inside `download_audio()` class from `youtube_music_url_fetcher.py` to download the audio file:
+   
+   full python code with -> `spell_checking = False , url_and_pytube_obj = True`: 
+
+   
+   ```python
+   import youtube_music_url_fetcher
+
+   song_info = youtube_music_url_fetcher.get_song_data_from_name(song_name="song name",spell_checking=False,url_and_pytube_obj=True)
+   print(song_info)
+   ```
+
+   Example Output:
+
+   ```python
+   [{"title":title,"lyric":None,"url":url,"thumbnail":thumbnail_url,"pytube_obj":pytube_obj}]
+   ```
+
+   ***
+
+
+   full python code with -> `spell_checking = True , url_and_pytube_obj = False`: 
+
+   
+   ```python
+   import youtube_music_url_fetcher
+
+   song_info = youtube_music_url_fetcher.get_song_data_from_name(song_name="song name",spell_checking=True,url_and_pytube_obj=False)
+   print(song_info)
+   ```
+
+   Example Output:
+
+   ```python
+   [{"title":title,"id":id,"thumbnail":thumbnail_url,"ytmusic_json":ytm}]
+   ```
+
+   ***
+
+   
+4. Use the `download_file()` function inside `download_audio()` class from `youtube_music_url_fetcher.py` to download the audio file:
 
    full python code: 
    ```python
    import youtube_music_url_fetcher
-   obj = youtube_music_url_fetcher.download_audio(audio_url="audio url extracted using this lib",file_name="name of file",del_file="for deleting the existing file with the file at the starting // pass a bool(True/False)")
+   obj = youtube_music_url_fetcher.download_audio(audio_url="audio url extracted using this lib",file_name="name of file",del_file="for deleting the existing file with the same file name // pass a bool(True/False)")
    obj.download_file()
    ```
-6. getting one url only:
+5. getting one url only:
 
    full python code: 
    ```python
    import youtube_music_url_fetcher
 
-   url = youtube_music_url_fetcher.get_song_name(song_name="song name", url_only=True)
+   url = youtube_music_url_fetcher.get_song_data_from_name(song_name="song name", url_only=True)
    print(url)
    ```
 
@@ -90,7 +136,7 @@ pip install innertube ytmusicapi pytube
    ['https://.............']
    ```
    
-7. getting url and downloading song:
+6. getting url and downloading song:
    
    full code:
    ```python
@@ -103,13 +149,16 @@ pip install innertube ytmusicapi pytube
    downloader.download_file()
    ```
    
-## Important Notes
+# Important Notes
 
 - Keep your dependencies up to date for security and compatibility reasons.
 
-Feel free to modify the script or enhance it based on your specific use case. Happy coding!
+# Contributing
+
+Contributions are welcome! If you encounter any issues or have suggestions for improvements, please open an issue or submit a pull request.
 
 
 # Disclaimer:
+
 USE THE SOFTWARE AT YOUR OWN RISK.THE AUTHOR(S) DISCLAIM ANY WARRANTY OR GUARANTEE OF ITS PERFORMANCE, ACCURACY, OR SUITABILITY FOR ANY PARTICULAR PURPOSE.
 THE AUTHOR(S) PROVIDE THIS SOFTWARE 'AS IS' WITHOUT ANY WARRANTY. THEY ARE NOT RESPONSIBLE FOR ANY ISSUES OR CONSEQUENCES ARISING FROM THE USE OF THIS SOFTWARE.
