@@ -162,3 +162,7 @@ Contributions are welcome! If you encounter any issues or have suggestions for i
 
 USE THE SOFTWARE AT YOUR OWN RISK.THE AUTHOR(S) DISCLAIM ANY WARRANTY OR GUARANTEE OF ITS PERFORMANCE, ACCURACY, OR SUITABILITY FOR ANY PARTICULAR PURPOSE.
 THE AUTHOR(S) PROVIDE THIS SOFTWARE 'AS IS' WITHOUT ANY WARRANTY. THEY ARE NOT RESPONSIBLE FOR ANY ISSUES OR CONSEQUENCES ARISING FROM THE USE OF THIS SOFTWARE.
+
+This project and its contents are not affiliated with, funded, authorized, endorsed by, or in any way associated with YouTube, Google LLC or any of its affiliates and subsidiaries.
+
+Any trademark, service mark, trade name, or other intellectual property rights used in this project are owned by the respective owners.
