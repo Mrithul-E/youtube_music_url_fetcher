@@ -2,7 +2,7 @@
 
 # YouTube Music and YouTube API Integration
 
-This Python script, `youtube_music_url_fetcher.py`, leverages the YouTube Music API and YouTube API to retrieve information about songs based on a provided search term. The script is designed to find the top 6 search results for a given song name, extract audio URLs for those songs, and fetch lyrics if available. Additionally, it provides a convenient function, `get_song_data_from_name()`, for users to obtain information about a specific song.
+This Python script, `youtube_music_url_fetcher.py`, leverages the `innertube` python library to retrieve youtube search data and `youtubemusicapi` python library to retrieve information about songs based on a provided search term and `pytube` for getting decipher urls from youtube. The script is designed to find the top 6 search results for a given song name, extract audio URLs for those songs, and fetch lyrics if available. Additionally, it provides a convenient function, `get_song_data_from_name()`, for users to obtain information about a specific song.
 
 ## Dependencies
 
