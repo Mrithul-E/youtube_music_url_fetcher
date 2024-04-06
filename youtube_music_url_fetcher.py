@@ -1,242 +1,104 @@
-import innertube
 from ytmusicapi import YTMusic
-from pytube import YouTube
+import innertube
+import copy
 from concurrent.futures import ThreadPoolExecutor
-import requests
-import threading
-from concurrent.futures import Future
-import os 
-import mutagen
 
-try:
-    yt = YTMusic()
-    client = innertube.InnerTube("WEB")
-except:
-    yt = YTMusic()
-    client = innertube.InnerTube("WEB")
+android_music_client = innertube.InnerTube("ANDROID_MUSIC")
+web_music_client = innertube.InnerTube("WEB")
+yt_music_client = YTMusic()
+
+def get_lyrics(video_id):
     
-class download_audio:
+    def extract_transcript_params(next_data):
+        engagement_panels = next_data["engagementPanels"]
+
+        for engagement_panel in engagement_panels:
+            engagement_panel_section = engagement_panel[
+                "engagementPanelSectionListRenderer"
+            ]
+
+            if engagement_panel_section.get("panelIdentifier")!= "engagement-panel-searchable-transcript":
+                continue
+
+            return engagement_panel_section["content"]["continuationItemRenderer"]["continuationEndpoint"]["getTranscriptEndpoint"]["params"]
+    try:
+        data = web_music_client.next(video_id)
+        transcript_params = extract_transcript_params(data)
+        transcript = web_music_client.get_transcript(transcript_params)
+        transcript = web_music_client.get_transcript(transcript)
+        transcript_segments = transcript["actions"][0]["updateEngagementPanelAction"]["content"]["transcriptRenderer"]["content"]["transcriptSearchPanelRenderer"]["body"]["transcriptSegmentListRenderer"]["initialSegments"]
+        
+        return {"synced":True,"lyric":transcript_segments}
     
-    def __init__(self, audio_url, file_name,del_file : bool):
-        self.audio_url = audio_url
-        self.file_name = file_name
-        if del_file:
+    except Exception as e:
+        
+        lyrics_browse_id = yt_music_client.get_watch_playlist(video_id)
+                 
+        lyric = None
+        
+        if lyrics_browse_id['lyrics']:
             try:
-                os.remove(self.file_name)
+                lyric = yt_music_client.get_lyrics(lyrics_browse_id['lyrics'])
+                return {"synced":False,"lyric":lyric}
             except:
-               pass 
-        
+                lyric = yt_music_client.get_lyrics(lyrics_browse_id['lyrics'])
+                return {"synced":False,"lyric":lyric} 
+        else:
+            return None
+
+def get_audio_video_url(video_id):
     
-    def get_chunk_list(self):
-        r = requests.get(self.audio_url,stream=True)
-        byt = r.headers['Content-Length']
-        byt = int(byt)
+    data = android_music_client.player(video_id=video_id)
 
-        half_bytes = byt/2
-        start_end_bytes = []
-        start = 0
-        half_bytes = str(half_bytes).replace(".0","")
-        try:
-            half_bytes = int(half_bytes)
-        except:
-            half_bytes = float(half_bytes)
-                
-        if str(type(half_bytes)) == "<class 'float'>":
-                half_bytes = half_bytes+0.5
+    formats = copy.deepcopy(data['streamingData']['formats'])
+    formats.extend(data['streamingData']['adaptiveFormats'])
 
-        end = half_bytes
-
-        while True:
-            if end > byt:
-                end = byt
-            if end == byt:
-                start_end_bytes.append((start,end))
-                break
-            start_end_bytes.append((start,end))
-            start = end+1
-            end = start+(half_bytes-1)
-        return start_end_bytes, byt
+    audio_formats = []
+    video_formats = []
     
-    def download(self,*download_data):
-
-        start_byte_and_end_byte, url, file_name = download_data
+    for i in formats:
+        if i['mimeType'].find("audio") == 0:
+            audio_formats.append(i)
+        else:
+            video_formats.append(i)
     
-        
-        headers = {'Range': 'bytes=%d-%d' % (start_byte_and_end_byte[0],start_byte_and_end_byte[1])} 
-        r = requests.get(url, stream=True,headers=headers)
-        print(r.headers['Content-Length'])
-        try:
-            with open(file_name, 'ab') as audio_file:
-                for chunk in r.iter_content(chunk_size=1024):
-                    audio_file.write(chunk)
-        except:
-            import time 
-            time.sleep(1)
+    return {"audio_formats":audio_formats, "video_formats":video_formats}  
+
+def yt_music_song_video_search(song_name, ignore_spell_correction: bool = False):
+    song_name_json = yt_music_client.search(song_name,ignore_spelling = ignore_spell_correction)
+
+    song_and_video = []
+    copy_song_json_list = copy.deepcopy(song_name_json)
+    pop_index_list = []
+
+    #filter songs and videos
+    for count,i in enumerate(song_name_json):
+        if i['resultType'] == 'song' and i['category'] != 'Episodes' or i['resultType'] == 'video' and i['category'] != 'Episodes':
+            song_and_video.append(i)
+            pop_index_list.append(count) 
+
+    for i in sorted(pop_index_list,reverse=True):
+        copy_song_json_list.pop(i)
+    
+    #returning - song_and_video(only song,video) , copy_song_json_list(oother formats without song,video)
+    return song_and_video, copy_song_json_list
+
+def get_full_response(song_name, ignore_spell_correction: bool = False,lyrics: bool = False):
+    song_and_video, other_formats = yt_music_song_video_search(song_name=song_name, ignore_spell_correction=ignore_spell_correction)
+    video_id_list = [id['videoId'] for id in song_and_video]
+    
+    with ThreadPoolExecutor(max_workers=25) as executor:
+        url_list = list(executor.map(get_audio_video_url,video_id_list))
+        if lyrics:
+            lyrics_list = list(executor.map(get_lyrics,video_id_list))
+        else:
+            lyrics_list = [None]*len(video_id_list)
             
-            with open(file_name, 'ab') as audio_file:
-                for chunk in r.iter_content(chunk_size=1024):
-                    audio_file.write(chunk)
-        
-    
-    def download_file(self):
-        """
-        Download file at faster speed 
-        """
-        chunks,byt = self.get_chunk_list()
-        args_list = tuple(((int(chunk[0]),int(chunk[1])), self.audio_url, self.file_name) for chunk in chunks)
-        
-       
-        #_____________________________
-        # download the 2 chunks parallel
-        
-        results = []
-        for i in args_list:
-            thread = threading.Thread(target=self.download, args=i)
-            thread.start()
-            thread.join()
-
-        #______________________________ 
-        
-        # rearrange the 2 binary chunks if the audio file is corrupted 
-        # try:
-        #     file_info = mutagen.File(self.file_name)
-        #     print(file_info)
-        #     if file_info == {}:
-        #         print("rearranging chunks in the file!!")
-        #         # reverse the results list and write it to file 
-        #         results = results[::-1]
-        #         os.remove(self.file_name)
-        #         with open(self.file_name,"ab") as audio_rearrange:
-        #             for i in results:
-        #                 audio_rearrange.write(i)
-        # except:
-        #     print("rearranging chunks in the file!!")
-        #     # reverse the results list and write it to file 
-        #     results = results[::-1]
-        #     os.remove(self.file_name)
-        #     with open(self.file_name,"ab") as audio_rearrange:
-        #         for i in results:
-        #             audio_rearrange.write(i)
-        
-    
-    def download_chunks(self):
-        r = requests.get(self.audio_url,stream=True)
-        for i in r.iter_content(1024*3):
-            with open(self.file_name,'ab') as file:
-                file.write(i)
-        
-
-def get_audio_url(song_name):
-    data = client.search(query=song_name)
-    video_id_1st_list = []
-    #get video id from search results
-    for i in data['contents']['twoColumnSearchResultsRenderer']['primaryContents']['sectionListRenderer']['contents'][0]['itemSectionRenderer']['contents']:
-        try:
-            video_id_str= i['videoRenderer']['videoId']
-            video_id_1st_list.append(video_id_str)
-        except:
-            pass    
-    
-    link = None
-    for j in video_id_1st_list:
-            yt=YouTube("https://www.youtube.com/watch?v="+j)
-            json_respo = yt.streaming_data
-            streamData_adap_formats = json_respo['adaptiveFormats']
-            for i in streamData_adap_formats:
-                if "mimeType" in i:
-                    if i["mimeType"].split(";")[0]=="audio/mp4":
-                        if "url" in i:
-                            link = i["url"]
-                            break
-            break               
-    return link         
-
-def get_lyrics_of_song(videID):
-    """
-    for getting the song lyrics using videoid
-    """
-    lyrics_browse_id = yt.get_watch_playlist(videID)
-    lyric = None
-    if lyrics_browse_id['lyrics']:
-        lyric = yt.get_lyrics(lyrics_browse_id['lyrics'])
-    else:
-        lyric = None   
-    return lyric     
-
-
-def get_song_data_from_name(song_name,url_only):
-    """
-    this function auto-correct the spelling mistakes, get search results from yt-music and 
-    then call other functions for getting lyrics and url of song 
-    """
-    name = song_name
-    title_list = []
-    vide_id_list = []
-    thumbnails = []
-    if not url_only:
-        song_name_json = yt.search(name)
-        k = 0
-        title_name = None
-        
-        while True:
-            if k == len(song_name_json):
-                break
+        song_full_details = []    
+        for song_video,url,lyric in zip(song_and_video,url_list,lyrics_list):
+            song_video["url"] = url
+            song_video["lyric"] = lyric
             
-            if song_name_json[k]['category'] != 'Featured playlists' and song_name_json[k]['category'] != 'Community playlists' and song_name_json[k]['category'] != 'More from YouTube':
-                try:
-                    title_name = song_name_json[k]['title']
-                    video_id = song_name_json[k]['videoId'] 
-                    thumbnail_url = song_name_json[k]['thumbnails'][0]['url']
-                except:
-                    k += 1
-                    continue      
-            else:
-                k += 1
-                continue 
-            title_list.append(title_name+" "+"song")
-            vide_id_list.append(video_id)
-            thumbnails.append(thumbnail_url)
+            song_full_details.append(song_video) 
             
-            k += 1
-            if len(title_list) == 5:
-                break
-    else:
-        title_list.append(song_name+"song")
-        # Number of concurrent requests (adjust as needed)
-        num_threads = min(8, len(title_list))  # You can adjust the number of threads based on your needs
-
-        # Using ThreadPoolExecutor to parallelize the requests
-        with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            urls = list(executor.map(get_audio_url,title_list))  
-         
-        return urls          
-    #_______________________________________
-    
-    # artist_names = ""
-    # for i in song_name_json[0]['artists']:
-    #     artist_names = artist_names+i["name"]
-    # song_name = title_name+" "+artist_names
-    # print(song_name) 
-    
-    #_________________________________________
-    
-    
-    # Number of concurrent requests (adjust as needed)
-    num_threads = min(8, len(title_list))  # You can adjust the number of threads based on your needs
-
-    # Using ThreadPoolExecutor to parallelize the requests
-    with ThreadPoolExecutor(max_workers=num_threads) as executor:
-        urls = list(executor.map(get_audio_url,title_list))  
-        
-    num_threads = min(8, len(vide_id_list))  # You can adjust the number of threads based on your needs
-
-    # Using ThreadPoolExecutor to parallelize the requests
-    with ThreadPoolExecutor(max_workers=num_threads) as executor:
-        lyrics = list(executor.map(get_lyrics_of_song,vide_id_list))    
-    #get_lyrics_of_song(videID=video_id) 
-    song_data_dict = []
-    for title,lyric,url,thumbnail in zip(title_list,lyrics,urls,thumbnails): 
-        song_data_dict.append({"title":title,"lyric":lyric,"url":url,"thumbnail":thumbnail})
-    return song_data_dict
-    
-#data = get_song_name()    
+        return song_full_details 
